@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 ENV LANG=en_EN.UTF-8
 
@@ -10,11 +10,13 @@ RUN apt-get update \
         wget \
         locales \
     && localedef -i en_US -f UTF-8 en_US.UTF-8 \
-    # Add the current key for package downloading - As the key changes every year at least
-    # Please refer to QGIS install documentation and replace it with the latest one
-    && wget -O - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --import \
-    && gpg --export --armor F7E06F06199EF2F2 | apt-key add - \
-    && echo "deb http://qgis.org/debian buster main" >> /etc/apt/sources.list.d/qgis.list \
+    # Add the current key for package downloading
+    # Please refer to QGIS install documentation (https://www.qgis.org/fr/site/forusers/alldownloads.html#debian-ubuntu)
+    && mkdir -m755 -p /etc/apt/keyrings \
+    && wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg https://download.qgis.org/downloads/qgis-archive-keyring.gpg \
+    # Add repository for latest version of qgis-server
+    # Please refer to QGIS repositories documentation if you want other version (https://qgis.org/en/site/forusers/alldownloads.html#repositories)
+    && echo "deb [signed-by=/etc/apt/keyrings/qgis-archive-keyring.gpg] https://qgis.org/debian bookworm main" | tee /etc/apt/sources.list.d/qgis.list \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests --allow-unauthenticated -y \
         qgis-server \
@@ -28,7 +30,7 @@ RUN apt-get update \
 
 RUN useradd -m qgis
 
-ENV TINI_VERSION v0.17.0
+ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
